@@ -43,8 +43,8 @@ class Kiwoom(QAxWidget):
         self.get_account_info() # 계좌 번호 가져오기
         self.detail_account_info() # 예수금 요청 시그널 포함
         self.detail_account_mystock() # 계좌평가잔고내역 가져오기
-        QTimer.singleShot(5000, self.not_concluded_account) # 5초 뒤에 미체결 종목들 가져오기 실행
         self.calculator_fnc()  # 종목 분석용, 임시용으로 실행
+        QTimer.singleShot(5000, self.not_concluded_account) # 5초 뒤에 미체결 종목들 가져오기 실행
         ######################################################
 
     def get_ocx_instance(self):
@@ -226,6 +226,9 @@ class Kiwoom(QAxWidget):
             self.detail_account_info_event_loop.exit()
 
         elif sRQName == "주식일봉차트조회":
+
+            print("주식일봉차트조회 시작")
+
             # GetCommData()는 600일치 이상의 데이터를 구하기 위해 사용
             code = self.dynamicCall("GetCommData(QString, QString, int, QString)", sTrCode, sRQName, 0, "종목코드")
             code = code.strip()
@@ -307,7 +310,7 @@ class Kiwoom(QAxWidget):
                             total_price = 0
                             for value in self.calcul_data[idx:120+idx]:
                                 total_price += int(value[1])
-                            moving_average_price = total_price / 120
+                            moving_average_price_prev = total_price / 120
 
 
                             if moving_average_price_prev <= int(self.calcul_data[idx][6]) and idx <= 20:
@@ -333,6 +336,7 @@ class Kiwoom(QAxWidget):
 
                     code_nm = self.dynamicCall("GetMasterCodeName(QString)", code)
 
+
                     f = open("files/condition_stock.txt", "a", encoding="utf-8")
                     f.write("%s\t%s\t%s\n" % (code, code_nm, str(self.calcul_data[0][1])))
                     f.close()
@@ -345,7 +349,7 @@ class Kiwoom(QAxWidget):
 
 
     def stop_screen_cancel(self, sScrNo=None):
-        self.dynamicCall("DisconnectiRealData(QString)", sScrNo)
+        self.dynamicCall("DisconnectRealData(QString)", sScrNo)
 
     # 여기서 market_code는 시장 구분
     # 0(장내), 10(코스닥), 3(ELW), 8(ETF), 50(KONEX), 4(뮤추얼펀드), 5(신주인수권), 6(리츠), 9(하이얼펀드), 30(K=OTC)
@@ -354,7 +358,8 @@ class Kiwoom(QAxWidget):
         code_list = self.dynamicCall("GetCodeListByMarket(QString)", market_code)
         code_list = code_list.split(';')[:-1]
         return code_list
-    
+
+    # 종목 코드를 가져오기 위한 함수
     def calculator_fnc(self):
         code_list = self.get_code_list_by_market("10")
         
@@ -379,4 +384,4 @@ class Kiwoom(QAxWidget):
 
         self.dynamicCall("CommRqData(QString, QString, int, QString)", "주식일봉차트조회", "opt10081", sPrevNext, self.screen_calculation_stock)
 
-        self.calculator_event_loop.exit()
+        self.calculator_event_loop.exec_()
