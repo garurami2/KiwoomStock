@@ -116,16 +116,21 @@ class Kiwoom(QAxWidget):
             #로그인 처리가 완료됐으면 이벤트 루프를 종료한다.
             self.login_event_loop.exit()
         except Exception as e:
-            self.logging.logger.error(f"로그인 이벤트 루프 실행중 에러 발생 ")
+            self.logging._handle_request_error("로그인 이벤트 루프 실행중 에러 발생", e)
             traceback.print_exc()
 
     def get_account_info(self):
-        account_list = self.dynamicCall("GetLoginInfo(QString)", "ACCNO") # 계좌번호 반환
-        account_num = account_list.split(';')[0] # a;b;c  [a, b, c]
+        try:
 
-        self.account_num = account_num
+            account_list = self.dynamicCall("GetLoginInfo(QString)", "ACCNO") # 계좌번호 반환
+            account_num = account_list.split(';')[0] # a;b;c  [a, b, c]
 
-        self.logging.logger.debug("계좌번호 : %s" % account_num)
+            self.account_num = account_num
+
+            self.logging.logger.debug("계좌번호 : %s" % account_num)
+        except Exception as e:
+            self.logging._handle_request_error(f"계좌번호 조회중 에러 발생 : ")
+            traceback.print_exc()
 
     def detail_account_info(self, sPrevNext="0"):
         self.dynamicCall("SetInputValue(QString, QString)", "계좌번호", self.account_num)

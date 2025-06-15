@@ -1,4 +1,5 @@
 import logging
+import traceback
 import datetime
 import os
 
@@ -25,3 +26,7 @@ class Logging():
             self.logger.addHandler(fileHandler)
 
             self.logger.setLevel(logging.DEBUG)
+
+    def _handle_request_error(self, func_name: str, e: Exception) -> None:
+        self.logger.error(f"{func_name} 오류: {e}", exc_info=True)
+        traceback.print_exc()
