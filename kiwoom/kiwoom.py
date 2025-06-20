@@ -1,17 +1,16 @@
-import os
 import sys
-import traceback
 from PyQt5.QAxContainer import *
+from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import *
 from config.errorCode import *
 from PyQt5.QtTest import *
 from config.kiwoomType import *
 from config.log_class import *
-# from config.slack import *
 
 class Kiwoom(QAxWidget):
     def __init__(self):
         super().__init__()
+        self.app = QApplication(sys.argv)
         self.realType = RealType()
         self.logging = Logging()
         # self.slack = Slack() #슬랙 동작
@@ -82,6 +81,7 @@ class Kiwoom(QAxWidget):
         for code in self.portfolio_stock_dict.keys():
             screen_num = self.portfolio_stock_dict[code]['스크린번호']
             fids = self.realType.REALTYPE['주식체결']['체결시간']
+            self.logging.logger.debug(f"screen_num : {screen_num}, fids : {fids}")
             self.dynamicCall("SetRealReg(QString, QString, QString, QString)", screen_num, code, fids, "1")
 
         # self.slack.notification(
@@ -115,6 +115,10 @@ class Kiwoom(QAxWidget):
 
             #로그인 처리가 완료됐으면 이벤트 루프를 종료한다.
             self.login_event_loop.exit()
+
+        except KeyboardInterrupt:
+            self.logging.logger.error("사용자에 의해 실행이 중단되었습니다.")
+            self.app.quit()  # 또는 self.finished.emit() 으로 종료 트리거
         except Exception as e:
             self.logging._handle_request_error("로그인 이벤트 루프 실행중 에러 발생", e)
             traceback.print_exc()
@@ -128,6 +132,9 @@ class Kiwoom(QAxWidget):
             self.account_num = account_num
 
             self.logging.logger.debug("계좌번호 : %s" % account_num)
+        except KeyboardInterrupt:
+            self.logging.logger.error("사용자에 의해 실행이 중단되었습니다.")
+            self.app.quit()  # 또는 self.finished.emit() 으로 종료 트리거
         except Exception as e:
             self.logging._handle_request_error("get_account_info", e)
 
@@ -141,6 +148,9 @@ class Kiwoom(QAxWidget):
             self.dynamicCall("CommRqData(QString, QString, int, QString)", "예수금상세현황요청", "opw00001", sPrevNext, self.screen_my_info)
 
             self.detail_account_info_event_loop.exec_()
+        except KeyboardInterrupt:
+            self.logging.logger.error("사용자에 의해 실행이 중단되었습니다.")
+            self.app.quit()  # 또는 self.finished.emit() 으로 종료 트리거
         except Exception as e:
             self.logging._handle_request_error("detail_account_info", e)
 
@@ -154,6 +164,9 @@ class Kiwoom(QAxWidget):
             self.dynamicCall("CommRqData(QString, QString, int, QString)", "계좌평가잔고내역요청", "opw00018", sPrevNext, self.screen_my_info)
 
             self.detail_account_info_event_loop.exec_()
+        except KeyboardInterrupt:
+            self.logging.logger.error("사용자에 의해 실행이 중단되었습니다.")
+            self.app.quit()  # 또는 self.finished.emit() 으로 종료 트리거
         except Exception as e:
             self.logging._handle_request_error("detail_account_mystock", e)
 
@@ -166,6 +179,9 @@ class Kiwoom(QAxWidget):
             self.dynamicCall("CommRqData(QString, QString, int, QString)", "실시간미체결요청", "opt10075", sPrevNext, self.screen_my_info)
 
             self.detail_account_info_event_loop.exec_()
+        except KeyboardInterrupt:
+            self.logging.logger.error("사용자에 의해 실행이 중단되었습니다.")
+            self.app.quit()  # 또는 self.finished.emit() 으로 종료 트리거
         except Exception as e:
             self.logging._handle_request_error("not_concluded_account", e)
 
@@ -397,6 +413,9 @@ class Kiwoom(QAxWidget):
 
                     self.calcul_data.clear()
                     self.calculator_event_loop.exit()
+        except KeyboardInterrupt:
+            self.logging.logger.error("사용자에 의해 실행이 중단되었습니다.")
+            self.app.quit()  # 또는 self.finished.emit() 으로 종료 트리거
         except Exception as e:
             self.logging._handle_request_error("trdata_slot", e)
 
@@ -404,6 +423,9 @@ class Kiwoom(QAxWidget):
     def stop_screen_cancel(self, sScrNo=None):
         try:
             self.dynamicCall("DisconnectRealData(QString)", sScrNo) # 스크린 번호 연결 끊기
+        except KeyboardInterrupt:
+            self.logging.logger.error("사용자에 의해 실행이 중단되었습니다.")
+            self.app.quit()  # 또는 self.finished.emit() 으로 종료 트리거
         except Exception as e:
             self.logging._handle_request_error("stop_screen_cancel", e)
 
@@ -413,6 +435,9 @@ class Kiwoom(QAxWidget):
             code_list = self.dynamicCall("GetCodeListByMarket(QString)", market_code)
             code_list = code_list.split(';')[:-1]
             return code_list
+        except KeyboardInterrupt:
+            self.logging.logger.error("사용자에 의해 실행이 중단되었습니다.")
+            self.app.quit()  # 또는 self.finished.emit() 으로 종료 트리거
         except Exception as e:
             self.logging._handle_request_error("get_code_list_by_market", e)
             return None
@@ -428,22 +453,33 @@ class Kiwoom(QAxWidget):
 
                 self.logging.logger.debug("%s / %s : KOSDAQ Stock Code : %s is updating... " % (idx + 1, len(code_list), code))
                 self.day_kiwoom_db(code=code)
+        except KeyboardInterrupt:
+            self.logging.logger.error("사용자에 의해 실행이 중단되었습니다.")
+            self.app.quit()  # 또는 self.finished.emit() 으로 종료 트리거
         except Exception as e:
             self.logging._handle_request_error("calculator_fnc", e)
 
     def day_kiwoom_db(self, code=None, date=None, sPrevNext="0"):
         try:
+            self.logging.logger.debug("day_kiwoom_db 진입!!")
             QTest.qWait(3600) #3.6초마다 딜레이를 준다.
 
+            self.logging.logger.debug(f"dynamicCall 전! code : {code}")
             self.dynamicCall("SetInputValue(QString, QString)", "종목코드", code)
             self.dynamicCall("SetInputValue(QString, QString)", "수정주가구분", "1")
+            self.logging.logger.debug(f"dynamicCall 후! code : {code}")
 
             if date != None:
                 self.dynamicCall("SetInputValue(QString, QString)", "기준일자", date)
 
+            self.logging.logger.debug(f"opt10081 호출 전!")
             self.dynamicCall("CommRqData(QString, QString, int, QString)", "주식일봉차트조회", "opt10081", sPrevNext, self.screen_calculation_stock)
+            self.logging.logger.debug(f"opt10081 호출 후!")
 
             self.calculator_event_loop.exec_()
+        except KeyboardInterrupt:
+            self.logging.logger.error("사용자에 의해 실행이 중단되었습니다.")
+            self.app.quit()  # 또는 self.finished.emit() 으로 종료 트리거
         except Exception as e:
             self.logging._handle_request_error("day_kiwoom_db", e)
 
@@ -464,6 +500,9 @@ class Kiwoom(QAxWidget):
 
                         self.portfolio_stock_dict.update({stock_code:{"종목명":stock_name, "현재가":stock_price}})
                 f.close()
+        except KeyboardInterrupt:
+            self.logging.logger.error("사용자에 의해 실행이 중단되었습니다.")
+            self.app.quit()  # 또는 self.finished.emit() 으로 종료 트리거
         except Exception as e:
             self.logging._handle_request_error("read_code", e)
 
@@ -473,6 +512,9 @@ class Kiwoom(QAxWidget):
             self.all_stock_dict.update({"계좌평가잔고내역": self.account_stock_dict})
             self.all_stock_dict.update({'미체결종목': self.not_account_stock_dict})
             self.all_stock_dict.update({'포트폴리오종목': self.portfolio_stock_dict})
+        except KeyboardInterrupt:
+            self.logging.logger.error("사용자에 의해 실행이 중단되었습니다.")
+            self.app.quit()  # 또는 self.finished.emit() 으로 종료 트리거
         except Exception as e:
             self.logging._handle_request_error("merge_dict", e)
 
@@ -522,6 +564,11 @@ class Kiwoom(QAxWidget):
                 cnt += 1
 
             self.logging.logger.debug(self.portfolio_stock_dict)
+
+        except KeyboardInterrupt:
+            print("사용자에 의해 실행이 중단되었습니다.")
+            self.app.quit()  # 또는 self.finished.emit() 으로 종료 트리거
+
         except Exception as e:
             self.logging._handle_request_error("screen_number_setting", e)
 
@@ -667,6 +714,9 @@ class Kiwoom(QAxWidget):
 
                     elif not_quantity == 0:
                         del self.not_account_stock_dict[order_num]
+        except KeyboardInterrupt:
+            self.logging.logger.error("사용자에 의해 실행이 중단되었습니다.")
+            self.app.quit()  # 또는 self.finished.emit() 으로 종료 트리거
         except Exception as e:
             self.logging._handle_request_error("realdata_slot", e)
 
@@ -782,6 +832,9 @@ class Kiwoom(QAxWidget):
                 self.jango_dict[sCode].update({"매도매수구분": meme_gubun})
                 self.jango_dict[sCode].update({"(최우선)매도호가": first_sell_price})
                 self.jango_dict[sCode].update({"(최우선)매수호가": first_buy_price})
+        except KeyboardInterrupt:
+            self.logging.logger.error("사용자에 의해 실행이 중단되었습니다.")
+            self.app.quit()  # 또는 self.finished.emit() 으로 종료 트리거
         except Exception as e:
             self.logging._handle_request_error("chejan_slot", e)
 

@@ -1,0 +1,24 @@
+# 조회와 실시간 데이터 처리
+SetInputValue(BSTR sID      // TR에 명시된 Input이름
+            , BSTR sValue   // Input이름으로 지정한 값
+            )
+조회요청시 TR의 Input값을 지정하는 함수,
+CommRqData 호출 전에 입력값들을 세팅
+각 TR마다 Input 항목이 다름, 순서에 맞게 Input 값들을 셋팅해야 함
+예)
+      [OPT10081 : 주식일봉차트조회요청예시]
+
+      SetInputValue("종목코드"	,  "039490"); // 첫번째 입력값 설정
+      SetInputValue("기준일자"	,  "20160101");// 두번째 입력값 설정
+      SetInputValue("수정주가구분"	,  "1"); // 세번째 입력값 설정
+      LONG lRet = CommRqData( "RQName","OPT10081", "0","0600");// 조회요청
+
+CommRqData(BSTR sRQName     // 사용자 구분명(임의로 지정, 한글지원)
+         , BSTR StrCode     // 조회하려는 TR이름
+         , long nPrevNext   // 연속조회여부
+         , BSTR sScreenNo   // 화면번호(4자리 숫자 임의로 지정)
+         )
+-> 리턴값
+    - 0 : 조회요청 정상
+    - 그 외 : 에러(ex: -200, -201)
+
