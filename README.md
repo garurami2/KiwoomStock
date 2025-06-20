@@ -14,7 +14,8 @@ PyQt5와 ActiveX 통신을 활용해 실시간 시세 수신, 조건 검색, 자
 ---
 
 ## 📂 프로젝트 구조
-📁 project-root/\n
+```
+📁 project-root/
 ├── init.py # 앱 초기화 및 실행
 ├── kiwoom/
 │ └── kiwoom.py # 핵심 Kiwoom API 자동매매 로직 구현
@@ -24,7 +25,7 @@ PyQt5와 ActiveX 통신을 활용해 실시간 시세 수신, 조건 검색, 자
 │ └── kiwoomType.py # 실시간/체결/잔고 관련 FID 정보 정의
 └── files/
 └── condition_stock.txt # 조건검색에 통과한 종목 저장 파일
-
+```
 ---
 
 ## 🚀 실행 방법
