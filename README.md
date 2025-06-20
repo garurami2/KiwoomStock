@@ -14,7 +14,7 @@ PyQt5와 ActiveX 통신을 활용해 실시간 시세 수신, 조건 검색, 자
 ---
 
 ## 📂 프로젝트 구조
-📁 project-root/<br>
+📁 project-root/\n
 ├── init.py # 앱 초기화 및 실행
 ├── kiwoom/
 │ └── kiwoom.py # 핵심 Kiwoom API 자동매매 로직 구현
